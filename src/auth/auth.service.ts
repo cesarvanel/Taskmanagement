@@ -47,7 +47,8 @@ export class AuthService {
     sigInCredentialDto: SignInCredentialDto,
   ): Promise<{ accessToken: string }> {
     const { email, password } = sigInCredentialDto;
-    const user = await this.UserRepository.findOne({ where: { email } });
+
+    const user = await this.UserRepository.findOne({where:{email}})
 
     if (!user || !(await user.isValidPassword(password))) {
       throw new UnauthorizedException('Invalid Credentials');

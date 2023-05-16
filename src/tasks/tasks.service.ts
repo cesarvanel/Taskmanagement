@@ -5,6 +5,7 @@ import { Task } from './task.entity';
 import { TaskStatus } from './interfaces/task.enum';
 import { TaskFilterDto } from './dto/task-filter.dto';
 import { Repository } from 'typeorm';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -12,10 +13,6 @@ export class TasksService {
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
   ) {}
-
-  async findAll(): Promise<Task[]> {
-    return await this.taskRepository.find();
-  }
 
   async findOneById(id: number): Promise<Task> {
     const found = await this.taskRepository.findOneBy({ id });
@@ -26,22 +23,24 @@ export class TasksService {
     return found;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const { title, description } = createTaskDto;
     const task = this.taskRepository.create({
       title,
       description,
       status: TaskStatus.OPEN,
+      user
     });
-
     await this.taskRepository.save(task);
 
     return task;
   }
 
-  async findAllBy(filterDto: TaskFilterDto): Promise<Task[]> {
+  async findAllBy(filterDto: TaskFilterDto, user: User): Promise<Task[]> {
     const { status, search } = filterDto;
     const query = this.taskRepository.createQueryBuilder('task');
+
+    query.where('task.userId =:userId', { userId: user.id });
 
     if (status) {
       query.andWhere('task.status = :status', { status });
